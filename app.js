@@ -20,22 +20,10 @@ const listingRouter = require("./routes/listings.js");
 const reviewRouter = require("./routes/reviews.js");
 const userRouter = require("./routes/user.js");
 
-const dbUrl = process.env.ATLASDB_URL;
-
-async function main() {
-    await mongoose.connect(dbUrl)
-}
-
-main()
-.then(() => {
-    console.log("connected to DB")
-})    
-.catch(err => console.log(err));
-
-// async function main() {
-//   await mongoose.connect('mongodb://127.0.0.1:27017/wanderlust');
-// }
-
+// Falls back to a local mongod when no Atlas URL is configured.
+const dbUrl = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/wanderlust";
+const port = process.env.PORT || 8080;
+const secret = process.env.SECRET || "dev-only-secret-change-me";
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"))
@@ -47,22 +35,22 @@ app.use(express.static(path.join(__dirname, "/public")))
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     crypto: {
-        secret: process.env.SECRET,
+        secret,
     },
     touchAfter: 24*3600,
 });
 
-store.on("error", () => {
+store.on("error", (err) => {
     console.log("ERROR in MONGO SESSION STORE", err)
 })
 
 const sessionOptions = {
     store,
-    secret: process.env.SECRET,
+    secret,
     resave: false,
-    saveUnitialized: true,
+    saveUninitialized: true,
     cookie: {
-        expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true
     }
@@ -85,14 +73,9 @@ app.use((req, res, next) => {
     next();
 })
 
-app.listen(8080, () => {
-    console.log("Successful connection on 8080")
+app.get("/", (req, res) => {
+    res.redirect("/listings")
 })
-
-// app.get("/", (req, res) => {
-//     res.send("Hi i am grooot!!!!")
-// })
-
 
 app.use("/listings", listingRouter)
 app.use("/listings/:id/reviews", reviewRouter)
@@ -104,7 +87,33 @@ app.all("*", (req, res, next) => {
 })
 
 app.use((err, req, res, next) => {
+    // A malformed :id is a bad URL, not a server fault.
+    if (err.name === "CastError") {
+        err.statusCode = 404;
+        err.message = "Page Not Found";
+    }
     let {statusCode = 500, message = "Something Went Wrong!"} = err;
+    if (statusCode === 500) {
+        console.error(err);
+    }
     res.status(statusCode).render("listings/error.ejs", {message});
-    // res.status(statusCode).send(message);
 })
+
+async function main() {
+    await mongoose.connect(dbUrl)
+}
+
+// Only start listening once the DB is reachable, so a bad connection string
+// fails with a readable message instead of crashing on the first request.
+main()
+.then(() => {
+    console.log("connected to DB")
+    app.listen(port, () => {
+        console.log(`Successful connection on ${port}`)
+    })
+})
+.catch(err => {
+    console.error("Could not connect to MongoDB at", dbUrl)
+    console.error(err.message)
+    process.exit(1)
+});

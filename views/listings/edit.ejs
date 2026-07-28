@@ -29,7 +29,7 @@
 
         <div class="mb-3"> 
             <label for="image" class="form-label">Upload New Image</label>
-            <input name="listing[image]" value="<%=listing.image%>" class="form-control">
+            <input name="listing[image]" type="file" class="form-control">
         </div>
         
         <div class="row">
@@ -41,7 +41,7 @@
         
         <div class="mb-3 col-md-8">
             <label for="country" class="form-label">Country</label>
-            <input name="listing[Country]" value="<%=listing.country%>" class="form-control" required>
+            <input name="listing[country]" value="<%=listing.country%>" class="form-control" required>
             <div class="invalid-feedback">Enter Valid Country Name</div>
         </div>
         </div>

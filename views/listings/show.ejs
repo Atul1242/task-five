@@ -4,14 +4,14 @@
         <h3><%= listing.title%></h3>
     </div>
         <div class="card col-6 offset-3 show-card listing-card">
-        <img src="<%= listing.image.url%>" class="card-img-top show-img" alt="Listing_image">
+        <img src="<%= listing.image && listing.image.url%>" class="card-img-top show-img" alt="Listing_image">
         <div class="card-body">
 
-        <% if(listing.username) { %>
+        <% if(listing.owner) { %>
             <p class="card-text">Owned By <i><%= listing.owner.username %></i></p>
         <% }%>
         <p class="card-text"><%= listing.description%></p>
-        <p class="card-text">&#8377;<%= listing.price.toLocaleString("en-IN")%></p>
+        <p class="card-text">&#8377;<%= (listing.price || 0).toLocaleString("en-IN")%></p>
         <p class="card-text"><%= listing.location%></p>
         <p class="card-text"><%= listing.country%></p>
 
@@ -71,12 +71,14 @@
          <% for(review of listing.reviews) { %>
             <div class="card col-5 ms-3 mb-3">
                 <div class="card-body">
-                   <h5 class="card-title">@<%= review.author.username%></h5>
+                   <h5 class="card-title">@<%= review.author && review.author.username%></h5>
                    <p class="starability-result card-text" data-rating="<%= review.rating%>"></p>
                    <p class="card-text"><%= review.comment%></p>
+                 <% if(currUser && review.author && currUser._id.equals(review.author._id)) { %>
                  <form class="mb-3" method="POST" action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
                     <button class="btn btn-sm btn-dark">Delete</button>
                  </form>
+                 <% } %>
                 </div>
             </div>
          <% }%>
