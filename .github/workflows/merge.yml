@@ -1,0 +1,17 @@
+name: Auto Merge 
+
+on:
+    push:
+        branches:
+            - "dev-atul1"
+            - "dev-atul2"
+
+jobs:
+    merge:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Merge to Development Branch
+              run: git merge dev-*
+
+            - name: Push to Development Branch
+              run: git push origin development
