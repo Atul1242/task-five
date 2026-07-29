@@ -1,17 +1,30 @@
 name: Auto Merge 
 
 on:
-    push:
-        branches:
-            - "dev-atul1"
-            - "dev-atul2"
+  push:
+    branches:
+      - "dev-atul1"
+      - "dev-atul2"
+
+permissions:
+  contents: write 
 
 jobs:
-    merge:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Merge to Development Branch
-              run: git merge dev-*
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
 
-            - name: Push to Development Branch
-              run: git push origin development
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge and Push to Development
+        run: |
+          git checkout development
+          git merge origin/${{ github.ref_name }} --no-edit
+          git push origin development
