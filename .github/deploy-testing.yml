@@ -1,0 +1,43 @@
+name: Deployment Approval
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: 'Type:'
+        required: true
+        default: 'DEPLOY'
+        type: string
+      deploy_to:
+        description: 'Deploy to:'
+        required: true
+        default: 'testing'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  merge-and-deploy:
+    runs-on: ubuntu-latest
+    
+  
+    environment: testing 
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Merge into Testing
+        run: |
+          git checkout testing
+          
+          git merge origin/development --no-edit
+          
+          git push origin testing

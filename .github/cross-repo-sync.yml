@@ -1,0 +1,27 @@
+name: Sync to Company Repository
+
+on:
+  push:
+    branches:
+      - development
+
+jobs:
+  sync-repos:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Team Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: Push to Company Repository
+        env:
+          DESTINATION_PAT: ${{ secrets.COMPANY_REPO_PAT }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git remote add company "https://${DESTINATION_PAT}@github.com/Atul1242/task-five.git"
+          
+          git push company development:development
